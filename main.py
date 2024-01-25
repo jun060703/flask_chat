@@ -1,16 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import firebase_admin
 from firebase_admin import credentials, auth, db
-import os
-import base64
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from flask_socketio import SocketIO
-
+from flask_socketio import SocketIO, send
 
 app = Flask(__name__)
 app.secret_key = '12341234'
+socketio = SocketIO(app)
 
 cred = credentials.Certificate({
     "type": "service_account",
@@ -25,6 +23,7 @@ cred = credentials.Certificate({
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-wxebv%40chatpotpolio.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
 })
+
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chatpotpolio-default-rtdb.asia-southeast1.firebasedatabase.app/'})
 ref = db.reference('users')
 messages = []
@@ -38,16 +37,14 @@ def signin():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form.get('pw')
-        hashed_password = hash_password(password)
         name = request.form['name']
 
-        # Firebase Authentication을 통한 회원가입
         try:
             user = auth.create_user(
                 email=email,
                 password=password
             )
-            user_data = {'email': email, 'name': name,'password':password}
+            user_data = {'email': email, 'name': name, 'password': password}
             ref_users = db.reference('users')
             ref_users.push(user_data)
             flash("회원가입이 완료되었습니다!", 'success')
@@ -57,25 +54,6 @@ def signin():
             return redirect(url_for('signin'))
 
     return render_template('signin.html')
-
-
-def hash_password(password):
-    # 솔트 생성
-    salt = os.urandom(16)
-
-    # PBKDF2 알고리즘을 사용하여 비밀번호 해싱
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
-    )
-    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
-
-    # 해시된 비밀번호와 솔트를 조합하여 저장
-    hashed_password = f'{base64.urlsafe_b64encode(salt).decode()}${key.decode()}'
-    return hashed_password
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_user():
@@ -103,14 +81,14 @@ def login_user():
 
     return render_template('login.html')
 
-
-@app.route('/chat', methods=['GET', 'POST'])
+@app.route('/chat')
 def chat():
-    if request.method == 'POST':
-        new_message = {'sender': 'sender', 'text': request.form.get('message')}
-        messages.append(new_message)
+    return render_template('chatting.html')
 
-    return render_template('chatting.html', messages=messages)
+@socketio.on('message')
+def handle_message(msg):
+    print('Message: ' + msg)
+    send(msg, broadcast=True)
 
 @app.route('/logout')
 def logout():
@@ -119,4 +97,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8020, debug=True)
+    socketio.run(app, port=8020, debug=True)
