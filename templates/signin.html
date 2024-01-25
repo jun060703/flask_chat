@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login and Signup</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header>
+</header>
+<section>
+    <p>회원가입하기</p>
+    <form method="post" action="{{ url_for('signin') }}">
+        <div class="input">
+            <input type="email" placeholder="이메일" id="email" name="email" required> <br>
+            <input type="password" placeholder="비밀번호" id="pw" name="pw" required> <br>
+            <input type="text" placeholder="이름" id="name" name="name" required>
+        </div>
+        <input type="submit" value="회원가입" id="signInBtn">
+    </form>
+</section>
+</body>
+</html>

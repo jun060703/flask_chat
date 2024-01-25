@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>가채팅</h2>
+        </div>
+        <div class="chat-messages">
+            {% for message in messages %}
+                <div class="message {% if message['sender'] == 'receiver' %}receiver{% else %}sender{% endif %}">
+                    <div class="message-text">{{ message['text'] }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="input-container">
+            <form method="post" action="{{ url_for('chat') }}">
+                <input type="text" class="input-box" name="message" placeholder="메시지를 입력하세요..." required>
+                <button type="submit" class="send-button">전송</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
