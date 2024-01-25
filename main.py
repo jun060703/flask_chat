@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import firebase_admin
 from firebase_admin import credentials, auth, db
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from flask_socketio import SocketIO, send
-
+import requests
+import re
+import socket
 app = Flask(__name__)
 app.secret_key = '12341234'
 socketio = SocketIO(app)
+
 
 cred = credentials.Certificate({
     "type": "service_account",
@@ -23,10 +23,9 @@ cred = credentials.Certificate({
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-wxebv%40chatpotpolio.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
 })
-
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chatpotpolio-default-rtdb.asia-southeast1.firebasedatabase.app/'})
 ref = db.reference('users')
-messages = []
+
 
 @app.route('/')
 def index():
@@ -39,20 +38,13 @@ def signin():
         password = request.form.get('pw')
         name = request.form['name']
 
-        try:
-            user = auth.create_user(
-                email=email,
-                password=password
-            )
-            user_data = {'email': email, 'name': name, 'password': password}
-            ref_users = db.reference('users')
-            ref_users.push(user_data)
-            flash("회원가입이 완료되었습니다!", 'success')
-            return redirect(url_for('login_user'))
-        except auth.AuthError as e:
-            flash(f"회원가입 중 오류가 발생했습니다: {e}", 'danger')
-            return redirect(url_for('signin'))
 
+        user_data = {'email': email, 'name': name, 'password': password}
+        ref_users = db.reference('users')
+        ref_users.push(user_data)
+        
+        flash("회원가입이 완료되었습니다!", 'success')
+        return redirect(url_for('login_user'))
     return render_template('signin.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -68,7 +60,7 @@ def login_user():
             return redirect(url_for('login_user'))
 
         query = ref_users.order_by_child('email').equal_to(email).get()
-        print(query.items())
+        
         for user_key, user_data in query.items():
             if user_data.get('password') == password:
                 session['user_id'] = user_key
@@ -85,10 +77,17 @@ def login_user():
 def chat():
     return render_template('chatting.html')
 
+
 @socketio.on('message')
 def handle_message(msg):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(("pwnbit.kr", 443))
+    req = requests.get("http://ipconfig.kr")
+    print("외부 IP: ", re.search(r'IP Address : (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', req.text)[1], end=" ")
+    print("내부 IP: ", sock.getsockname()[0], end=" ")
     print('Message: ' + msg)
     send(msg, broadcast=True)
+
 
 @app.route('/logout')
 def logout():
