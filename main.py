@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import firebase_admin
 from firebase_admin import credentials, auth, db
-from flask_socketio import SocketIO, send
+from flask_socketio import SocketIO, send,emit
 import requests
 import re
 import socket
 app = Flask(__name__)
 app.secret_key = '12341234'
 socketio = SocketIO(app)
-
+connected_users = 0 
 
 cred = credentials.Certificate({
     "type": "service_account",
@@ -64,7 +64,7 @@ def login_user():
         for user_key, user_data in query.items():
             if user_data.get('password') == password:
                 session['user_id'] = user_key
-                session['username'] = user_data.get('username')
+                session['username'] = user_data.get('name')
                 flash("로그인 성공!", 'success')
                 return redirect(url_for('chat'))
 
@@ -78,15 +78,34 @@ def chat():
     return render_template('chatting.html')
 
 
+
+
+
+@socketio.on('connect')
+def handle_connect():
+    global connected_users
+    connected_users += 1
+    emit('update_user_count', {'count': connected_users}, broadcast=True)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    global connected_users
+    connected_users -= 1
+    emit('update_user_count', {'count': connected_users}, broadcast=True)
+
+
+
 @socketio.on('message')
 def handle_message(msg):
+    username = session.get('username')
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(("pwnbit.kr", 443))
     req = requests.get("http://ipconfig.kr")
     print("외부 IP: ", re.search(r'IP Address : (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', req.text)[1], end=" ")
     print("내부 IP: ", sock.getsockname()[0], end=" ")
-    print('Message: ' + msg)
-    send(msg, broadcast=True)
+    message=f"{username}: {msg}" 
+    send(message, broadcast=True)
+    
 
 
 @app.route('/logout')
@@ -96,4 +115,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == "__main__":
-    socketio.run(app, port=8020, debug=True)
+    socketio.run(app,host='0.0.0.0', port=9080, debug=True)
