@@ -5,7 +5,7 @@ def detect_faces():
     filterimage = cv2.imread(image_path2, cv2.IMREAD_UNCHANGED)
     resizeImage = cv2.resize(filterimage, dsize=(200, 200))
 
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + '\\haarcascade_frontalface_alt.xml')
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt.xml')
 
     while True:
         ret, frame = webcam.read()
@@ -35,5 +35,5 @@ def detect_faces():
     webcam.release()
     cv2.destroyAllWindows()
 
-image_path2 = 'C:/Users/407/Downloads/chatPy/static/image/bear.png'
+image_path2 = 'C:/Users/Samsung/Downloads/flask_chat-main/flask_chat/static/image/bear.png'
 detect_faces()
