@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <div id="chat-app">
         <h1>연결된 사용자: <span id="userCount">0</span></h1>
@@ -16,39 +18,43 @@
             <input id="message" autocomplete="off">
             <button id="send-button" onclick="sendMessage()">Send</button>
         </div>
+        <form >
+            <input type="submit" value="스노우">
+        </form>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
     <script type="text/javascript" src="chat-script.js"></script>
     <script>
-        var socket = io();
+        const socket = io();
 
-        socket.on('update_user_count', function(data) {
+        socket.on('update_user_count', function (data) {
             document.getElementById('userCount').textContent = data.count;
         });
 
         function sendMessage() {
-            var messageInput = document.getElementById('message');
+            const messageInput = document.getElementById('message');
             socket.emit('message', messageInput.value);
             messageInput.value = '';
         }
 
-        socket.on('message', function(msg) {
-            var messages = document.getElementById('messages');
-            var li = document.createElement('li');
+        socket.on('message', function (msg) {
+            const messages = document.getElementById('messages');
+            const li = document.createElement('li');
             li.textContent = msg;
             messages.appendChild(li);
             messages.scrollTop = messages.scrollHeight;
         });
         function sendMessage() {
-    var messageInput = document.getElementById('message');
-    var messageValue = messageInput.value.trim(); // Remove leading and trailing whitespace
+            const messageInput = document.getElementById('message');
+            const messageValue = messageInput.value.trim();
 
-    if (messageValue !== '') { // Check if the input value is not empty
-        socket.emit('message', messageValue);
-        messageInput.value = '';
-    }
-}
+            if (messageValue !== '') {
+                socket.emit('message', messageValue);
+                messageInput.value = '';
+            }
+        }
     </script>
 </body>
+
 </html>
