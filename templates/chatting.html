@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat App</title>
-    <style>
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
-        #message { margin-top: 10px; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <ul id="messages"></ul>
-    <input id="message" autocomplete="off"><button onclick="sendMessage()">Send</button>
+    <div id="chat-app">
+        <h1>연결된 사용자: <span id="userCount">0</span></h1>
+        <div id="chat-container">
+            <ul id="messages"></ul>
+        </div>
+        <div id="message-container">
+            <input id="message" autocomplete="off">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
-    <script type="text/javascript">
+    <script type="text/javascript" src="chat-script.js"></script>
+    <script>
         var socket = io();
+
+        socket.on('update_user_count', function(data) {
+            document.getElementById('userCount').textContent = data.count;
+        });
 
         function sendMessage() {
             var messageInput = document.getElementById('message');
@@ -29,16 +38,17 @@
             var li = document.createElement('li');
             li.textContent = msg;
             messages.appendChild(li);
-            window.scrollTo(0, document.body.scrollHeight);
+            messages.scrollTop = messages.scrollHeight;
         });
+        function sendMessage() {
+    var messageInput = document.getElementById('message');
+    var messageValue = messageInput.value.trim(); // Remove leading and trailing whitespace
 
-        var input = document.getElementById("message");
-        input.addEventListener("keyup", function(event) {
-            if (event.keyCode === 13) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
+    if (messageValue !== '') { // Check if the input value is not empty
+        socket.emit('message', messageValue);
+        messageInput.value = '';
+    }
+}
     </script>
 </body>
 </html>

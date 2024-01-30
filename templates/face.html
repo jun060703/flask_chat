@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection</title>
+</head>
+<body>
+    <h1>Face Detection</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+
+    <script>
+        // 웹캠에서 비디오 스트림을 가져와서 비디오 태그에 표시
+        async function getVideo() {
+            const video = document.getElementById('video');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error('카메라를 열 수 없습니다:', err);
+            }
+        }
+
+        getVideo();
+    </script>
+</body>
+</html>
