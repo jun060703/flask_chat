@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session,Response
 import firebase_admin
 from firebase_admin import credentials, auth, db
 from flask_socketio import SocketIO, send,emit
@@ -76,9 +76,6 @@ def login_user():
 @app.route('/chat')
 def chat():
     return render_template('chatting.html')
-
-
-
 
 
 @socketio.on('connect')
